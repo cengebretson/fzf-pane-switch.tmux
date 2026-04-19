@@ -4,7 +4,7 @@
 # If you press ENTER, it switches to the selected pane.
 # If you press ENTER on an empty line, it creates a new window in the current session.
 function select_pane() {
-    local border_styling="" fzf_version_comparison
+    local border_styling="" fzf_version fzf_version_comparison
     local current_pane pane pane_id preview
 
     # Save the currently active pane ID
@@ -28,7 +28,7 @@ function select_pane() {
         border_styling+=" --ghost 'type to search...'"
     fi
     # Fallback to old border styling used in tmux-fzf-pane-switch release v1.1.2 if $border_styling is not set
-    if [[ -z ${border_styling+x} ]]; then
+    if [[ -z "${border_styling}" ]]; then
         border_styling="--preview-label='pane preview'"
     fi
 
@@ -44,7 +44,7 @@ function select_pane() {
 
     # Launch switcher
     pane=$(tmux list-panes -aF "${4}" | 
-        eval fzf --exit-0 --print-query --reverse --tmux "${2}" --with-nth=2.. "${border_styling}" "${preview}" | 
+        eval SHELL=/bin/sh fzf --exit-0 --print-query --reverse --tmux "${2}" --with-nth=2.. "${border_styling}" "${preview}" |
         tail -1)
 
     # Set pane_id to first part of fzf output
@@ -96,7 +96,7 @@ command -v fzf >/dev/null 2>&1 || { echo "fzf not found"; exit 1; }
 preview_pane="${1}"
 # FZF window position
 fzf_window_position="${2}"
-# FZF previe window position
+# FZF preview window position
 fzf_preview_window_position="${3}"
 # TMUX list-panes format
 read -r -a list_panes_format_overrides <<< "${4}"
