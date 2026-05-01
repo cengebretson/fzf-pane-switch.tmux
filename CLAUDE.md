@@ -4,21 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A tmux plugin (TPM-compatible) that lets users switch to any pane across all sessions using fzf as a fuzzy finder. Two files do all the work:
+A tmux plugin (TPM-compatible) that lets users switch to any session, window, or pane across all sessions using fzf as a fuzzy finder. Two files do all the work:
 
 - `select_pane.tmux` — sourced by tmux at startup; reads user config options via `tmux show-option`, then registers a key binding that calls `select_pane.sh` with the resolved options as arguments.
-- `select_pane.sh` — invoked by tmux when the key binding fires; builds and runs the fzf command, then switches to the selected pane or offers to create a new window.
+- `select_pane.sh` — invoked by tmux when the key binding fires; builds a combined list of sessions, windows, and panes, runs fzf, then switches to the selected target via `tmux switch-client`.
 
 ## How the two scripts connect
 
-`select_pane.tmux` passes four positional arguments to `select_pane.sh`:
+`select_pane.tmux` passes six positional arguments to `select_pane.sh`:
 
 1. `preview_pane` (`true`/`false`)
 2. `fzf_window_position` (passed to `fzf --tmux`)
 3. `fzf_preview_window_position` (passed to `fzf --preview-window`)
-4. `list_panes_format` (space-separated tmux FORMAT tokens, e.g. `pane_id session_name window_name`)
+4. `session_icon` (Nerd Font icon for session entries)
+5. `window_icon` (Nerd Font icon for window entries)
+6. `pane_icon` (Nerd Font icon for pane entries)
 
-`select_pane.sh` converts the format token list into a `tmux list-panes -aF` format string and feeds the output into fzf. The first field of each line is always `#{pane_id}` (hidden from fzf via `--with-nth=2..`) and is used to switch to the selected pane.
+`select_pane.sh` combines output from `tmux list-sessions`, `tmux list-windows -a`, and `tmux list-panes -a` into a single fzf list. Each line's first field (hidden via `--with-nth=2..`) is the tmux target passed to `tmux switch-client -t`: a session ID (`$0`), window target (`session:index`), or pane ID (`%4`).
 
 ## Testing
 
@@ -29,7 +31,10 @@ There is no automated test suite. Test manually inside a live tmux session:
 tmux source-file ~/.tmux.conf
 
 # Or invoke select_pane.sh directly for quick iteration
-bash select_pane.sh true center,70%,80% right,,,nowrap "pane_id session_name window_name pane_title pane_current_command"
+bash select_pane.sh true center,70%,80% right,,,nowrap '󰐱' '󰖲' '󰘗'
+
+# Without Nerd Fonts
+bash select_pane.sh true center,70%,80% right,,,nowrap 'S' 'W' 'P'
 ```
 
 ## Version-gated fzf features

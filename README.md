@@ -4,14 +4,13 @@
 
 ![Demonstration of tmux-fzf-pane-switch in action](assets/tmux-fzf-pane-switch-demo.gif)
 
-Switch to any TMUX pane, in any session, by searching and filtering using fzf.
-
-Search and filter on any pane details, such as (but not limited to) the `#{window_name}`, `#{pane_title}`, or `#{pane_current_command}"`. If a pane cannot be found using the search criteria, the plugin will offer to create a new window in the current session.
+Switch to any TMUX session, window, or pane using fzf. The list is grouped hierarchically — sessions at the top, windows beneath their session, and panes beneath their window (only shown when a window has more than one pane).
 
 ## Requirements
 
-* [fzf](https://github.com/junegunn/fzf) >= 0.53.0 (requires the `--tmux` option). I tested with 0.55.0.
-* [tmux](https://github.com/tmux/tmux) >= 3.3. I tested with 3.3a.
+* [fzf](https://github.com/junegunn/fzf) >= 0.53.0 (requires the `--tmux` option).
+* [tmux](https://github.com/tmux/tmux) >= 3.3.
+* A [Nerd Font](https://www.nerdfonts.com/) for the default icons (configurable — see below).
 
 > [!NOTE]
 > To get the border styling as shown in the image above, you need fzf version >= 0.58.0.
@@ -49,13 +48,6 @@ Search and filter on any pane details, such as (but not limited to) the `#{windo
     ```
 
     Any customisation variables should be set **BEFORE** the `run-shell` line so they're correctly sourced.
-
-    For example:
-
-    ```bash
-    set -g @fzf_pane_switch_list-panes-format "session_name window_name pane_title pane_current_command"
-    run-shell ~/.tmux/plugins/fzf-pane-switch.tmux/select_pane.tmux
-    ```
 
 3. Reload your tmux configuration:
 
@@ -101,18 +93,33 @@ set -g @fzf_pane_switch_preview-pane-position "position"
 
 Default is `right,,,nowrap`. You can use any options allowed [https://man.archlinux.org/man/fzf.1.en#preview~3](https://man.archlinux.org/man/fzf.1.en#preview~3).
 
-### tmux list-panes format
+### Icons
 
-This is the output format of `tmux list-panes` that you see in the fzf window. You can use this to match on other tmux formats.
+Each entry type has a configurable icon. The defaults require a [Nerd Font](https://www.nerdfonts.com/).
 
 ```bash
-set -g @fzf_pane_switch_list-panes-format "FORMATS"
+set -g @fzf_pane_switch_session-icon "󰐱"
+set -g @fzf_pane_switch_window-icon  "󰖲"
+set -g @fzf_pane_switch_pane-icon    "󰘗"
 ```
 
-Default is `pane_id session_name window_name pane_title pane_current_command`.
+Any string works — including plain text fallbacks if you don't have a Nerd Font:
 
-> [!TIP]
-> You can use any tmux FORMAT option allowed [https://www.man7.org/linux/man-pages/man1/tmux.1.html#FORMATS](https://www.man7.org/linux/man-pages/man1/tmux.1.html#FORMATS). String manipulation should also work. For example, the `pane_id` by default is shown with a leading percent symbol (e.g. `%3`). You can remove this by setting `set -g @fzf_pane_switch_list-panes-format "s/%//:pane_id session_name window_name pane_title pane_current_command"`
+```bash
+set -g @fzf_pane_switch_session-icon "S"
+set -g @fzf_pane_switch_window-icon  "W"
+set -g @fzf_pane_switch_pane-icon    "P"
+```
+
+### Indent
+
+The indent string is prepended to the icon once for windows and twice for panes, creating the visual hierarchy.
+
+```bash
+set -g @fzf_pane_switch_indent "· "
+```
+
+Default is `· ` (middle dot + space). Set to an empty string for no indentation, or use any character(s) you prefer (e.g. `▸ `, `  `).
 
 ## Tools used in demonstration
 

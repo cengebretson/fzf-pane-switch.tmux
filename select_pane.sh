@@ -1,35 +1,27 @@
 #!/usr/bin/env bash
-# This script uses fzf to display a list of panes and allows you to select one.
-#
-# If you press ENTER, it switches to the selected pane.
-# If you press ENTER on an empty line, it creates a new window in the current session.
 function select_pane() {
     local border_styling="" fzf_version fzf_version_comparison
-    local current_pane pane pane_id preview
+    local current_pane pane target preview
 
     # Save the currently active pane ID
     current_pane=$(tmux display-message -p '#{pane_id}')
 
     # Setup border styling
-    # Specific fzf releases have added additional styling options.
     fzf_version=$(fzf --version | awk '{print $1}')
-    # - 0.58.0 or later, we can enable border styling
     vercomp '0.58.0' "${fzf_version}"
     fzf_version_comparison=$?
     if [[ ${fzf_version_comparison} -ne 1 ]]; then
         border_styling+=" --input-border --input-label=' Search ' --info=inline-right"
-        border_styling+=" --list-border --list-label=' Panes '"
+        border_styling+=" --list-border --list-label=' Tmux '"
         border_styling+=" --preview-border --preview-label=' Preview '"
     fi
-    # - 0.61.0 or later, we can enable ghost text
     vercomp '0.61.0' "${fzf_version}"
     fzf_version_comparison=$?
     if [[ ${fzf_version_comparison} -ne 1 ]]; then
         border_styling+=" --ghost 'type to search...'"
     fi
-    # Fallback to old border styling used in tmux-fzf-pane-switch release v1.1.2 if $border_styling is not set
     if [[ -z "${border_styling}" ]]; then
-        border_styling="--preview-label='pane preview'"
+        border_styling="--preview-label='preview'"
     fi
 
     # Check if we're using the fzf preview pane
@@ -42,24 +34,42 @@ function select_pane() {
         preview+="' --preview-window=${3}"
     fi
 
-    # Launch switcher
-    pane=$(tmux list-panes -aF "${4}" | 
+    local session_icon="${4}" window_icon="${5}" pane_icon="${6}" indent="${7}"
+
+    # Build combined list grouped by session > window > pane.
+    # Each line is prefixed with a sort key (session:window_idx:pane_idx:type) so that
+    # a single sort produces the correct nesting order without nested tmux calls.
+    # The ▸ / ▹▹ prefixes on the icon provide the visual indent level.
+    # Field 1 (hidden): tmux switch-client target ($session_id, session:window, %pane_id)
+    # Field 2 (visible): indented icon
+    # Fields 3+ (visible): display info
+    pane=$(
+        {
+            tmux list-sessions -F '#{session_name} #{session_id} #{session_windows}' | \
+                awk -v icon="${session_icon}" '{
+                    printf "%s:00000:00000:0 %s %s %s  %s windows\n", $1, $2, icon, $1, $3
+                }'
+
+            tmux list-windows -aF '#{session_name} #{window_index} #{session_name}:#{window_index} #{window_name} #{window_panes}' | \
+                awk -v icon="${indent}${window_icon}" '{
+                    printf "%s:%05d:00000:1 %s %s %s  %s  %s panes\n", $1, $2, $3, icon, $1, $4, $5
+                }'
+
+            tmux list-panes -aF '#{session_name} #{window_index} #{pane_index} #{pane_id} #{window_name} #{pane_current_command} #{window_panes}' | \
+                awk -v icon="${indent}${indent}${pane_icon}" '$7 > 1 {
+                    printf "%s:%05d:%05d:2 %s %s %s  %s  %s  %s\n", $1, $2, $3, $4, icon, $4, $1, $5, $6
+                }'
+        } | sort | cut -d' ' -f2- |
         eval SHELL=/bin/sh fzf --exit-0 --print-query --reverse --tmux "${2}" --with-nth=2.. "${border_styling}" "${preview}" |
-        tail -1)
+        tail -1
+    )
 
-    # Set pane_id to first part of fzf output
-    pane_id=$(echo "${pane}" | awk '{print $1}')
+    target=$(echo "${pane}" | awk '{print $1}')
 
-    # If pane_id is empty, exit without changing pane
-    if [[ -z "${pane_id}" ]]; then
+    if [[ -z "${target}" ]]; then
         tmux switch-client -t "${current_pane}"
-    # Check if pane exists
-    elif tmux has-session -t "${pane_id}" >/dev/null 2>&1; then
-        # Found it! Let's switch.
-        tmux switch-client -t "${pane_id}"
     else
-        # Pane not found, let's create it.
-        tmux command-prompt -b -p "Press ENTER to create a new window in the current session [${pane}]" "new-window -n \"${pane}\""
+        tmux switch-client -t "${target}"
     fi
 }
 
@@ -67,39 +77,33 @@ function vercomp() {
   local v1="$1"
   local v2="$2"
 
-  # Split each version string into arrays using '.' as the delimiter
   IFS='.' read -r -a ver1 <<< "$v1"
   IFS='.' read -r -a ver2 <<< "$v2"
 
-  # Compare major, minor, and patch components one by one
   for i in 0 1 2; do
-    # Default to 0 if a component is missing (e.g., "1.2" becomes "1.2.0")
     local num1="${ver1[i]:-0}"
     local num2="${ver2[i]:-0}"
 
-    # Compare the numeric values of the current component
     if (( num1 > num2 )); then
-      return 1  # First version is newer
+      return 1
     elif (( num1 < num2 )); then
-      return 2  # First version is older
+      return 2
     fi
   done
 
-  return 0  # Versions are equal
+  return 0
 }
 
 # Check for required commands
 command -v tmux >/dev/null 2>&1 || { echo "tmux not found"; exit 1; }
 command -v fzf >/dev/null 2>&1 || { echo "fzf not found"; exit 1; }
 
-# Pane preview
 preview_pane="${1}"
-# FZF window position
 fzf_window_position="${2}"
-# FZF preview window position
 fzf_preview_window_position="${3}"
-# TMUX list-panes format
-read -r -a list_panes_format_overrides <<< "${4}"
-list_panes_formatted_overrides=$(printf '#{%s} ' "${list_panes_format_overrides[@]}")
+session_icon="${4}"
+window_icon="${5}"
+pane_icon="${6}"
+indent="${7}"
 
-select_pane "${preview_pane}" "${fzf_window_position}" "${fzf_preview_window_position}" "#{pane_id} ${list_panes_formatted_overrides}"
+select_pane "${preview_pane}" "${fzf_window_position}" "${fzf_preview_window_position}" "${session_icon}" "${window_icon}" "${pane_icon}" "${indent}"
