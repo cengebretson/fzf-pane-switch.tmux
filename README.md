@@ -1,19 +1,16 @@
 <h1 align="center">
-    🔀 TMUX FZF Pane Switch
+    🔀 tmux-fzf-jump
 </h1>
 
 ![Demonstration of tmux-fzf-pane-switch in action](assets/tmux-fzf-pane-switch-demo.gif)
 
-Switch to any TMUX session, window, or pane using fzf. The list is grouped hierarchically — sessions at the top, windows beneath their session, and panes beneath their window (only shown when a window has more than one pane).
+Switch to any tmux session, window, or pane using fzf. The list is grouped hierarchically — sessions at the top, windows beneath their session, and panes beneath their window (only shown when a window has more than one pane).
 
 ## Requirements
 
-* [fzf](https://github.com/junegunn/fzf) >= 0.53.0 (requires the `--tmux` option).
+* [fzf](https://github.com/junegunn/fzf) >= 0.53.0 (requires `--tmux`; >= 0.58.0 for border styling as shown above).
 * [tmux](https://github.com/tmux/tmux) >= 3.3.
 * A [Nerd Font](https://www.nerdfonts.com/) for the default icons (configurable — see below).
-
-> [!NOTE]
-> To get the border styling as shown in the image above, you need fzf version >= 0.58.0.
 
 ## Installation
 
@@ -21,33 +18,31 @@ Switch to any TMUX session, window, or pane using fzf. The list is grouped hiera
 
 1. Install [TPM (Tmux Plugin Manager)](https://github.com/tmux-plugins/tpm).
 
-2. Add `tmux-fzf-pane-switch` to your `~/.tmux.conf`:
+2. Add `tmux-fzf-jump` to your `~/.tmux.conf`:
 
     ```bash
-    set -g @plugin 'kristijan/fzf-pane-switch.tmux'
+    set -g @plugin 'cengebretson/tmux-fzf-jump'
     ```
 
-3. Start tmux and install the plugin.
+3. Inside a running tmux session, press `<prefix> + I` (capital I, as in Install) to fetch the plugin.
 
-    Press `<tmux_prefix> + I` (capital i, as in Install) to install the plugin.
-
-    Press `<tmux_prefix> + U` (capital u, as in Update) to update the plugin.
+    Press `<prefix> + U` (capital U, as in Update) to update it later.
 
 ### Manual installation
 
 1. Clone this repository to your desired location:
 
     ```bash
-    git clone https://github.com/kristijan/fzf-pane-switch.tmux.git ~/.tmux/plugins/fzf-pane-switch.tmux
+    git clone https://github.com/cengebretson/tmux-fzf-jump.git ~/.tmux/plugins/tmux-fzf-jump
     ```
 
 2. Add the following to your `~/.tmux.conf`:
 
     ```bash
-    run-shell ~/.tmux/plugins/fzf-pane-switch.tmux/select_pane.tmux
+    run-shell ~/.tmux/plugins/tmux-fzf-jump/select_pane.tmux
     ```
 
-    Any customisation variables should be set **BEFORE** the `run-shell` line so they're correctly sourced.
+    Any configuration variables should be set **before** the `run-shell` line so they're correctly sourced.
 
 3. Reload your tmux configuration:
 
@@ -55,9 +50,24 @@ Switch to any TMUX session, window, or pane using fzf. The list is grouped hiera
     tmux source-file ~/.tmux.conf
     ```
 
-## Customise
+## Usage
 
-You can override the following options in your `tmux.conf` file.
+Press `<prefix> + j` (the default key binding) to open the switcher. Type to fuzzy-search, use arrow keys to navigate, and press Enter to switch.
+
+## Configuration
+
+All options are set in `~/.tmux.conf`. Quick reference:
+
+| Option | Default | Description |
+|---|---|---|
+| `@fzf_pane_switch_bind-key` | `j` | Key binding (with prefix) |
+| `@fzf_pane_switch_window-position` | `center,70%,80%` | fzf popup position |
+| `@fzf_pane_switch_preview-pane` | `true` | Show pane preview |
+| `@fzf_pane_switch_preview-pane-position` | `right,,,nowrap` | Preview window position |
+| `@fzf_pane_switch_session-icon` | `󰐱` | Icon for session entries |
+| `@fzf_pane_switch_window-icon` | `󰖲` | Icon for window entries |
+| `@fzf_pane_switch_pane-icon` | `󰘗` | Icon for pane entries |
+| `@fzf_pane_switch_indent` | `· ` | Indent string for hierarchy |
 
 ### Key binding
 
@@ -65,33 +75,33 @@ You can override the following options in your `tmux.conf` file.
 set -g @fzf_pane_switch_bind-key "key binding"
 ```
 
-Default is `prefix + s`, which replaces the tmux default session select (tmux default: `choose-tree -Zs -O name`)
+Default is `prefix + j`. This key is unbound in vanilla tmux, so it won't override any built-in binding.
 
-### fzf window position
+### fzf popup position
 
 ```bash
 set -g @fzf_pane_switch_window-position "position"
 ```
 
-Default is `center,70%,80%`. You can use any options allowed [https://man.archlinux.org/man/fzf.1.en#tmux](https://man.archlinux.org/man/fzf.1.en#tmux).
+Default is `center,70%,80%`. Accepts any value from the [`--tmux` option](https://man.archlinux.org/man/fzf.1.en#tmux) in the fzf man page.
 
-### fzf pane preview
+### Pane preview
 
 ```bash
 set -g @fzf_pane_switch_preview-pane "[true|false]"
 ```
 
-Default is `true`
+Default is `true`.
 
-### fzf pane preview position
+### Pane preview position
 
-Only when `@fzf_pane_switch_preview-pane` is `true`.
+Only applies when `@fzf_pane_switch_preview-pane` is `true`.
 
 ```bash
 set -g @fzf_pane_switch_preview-pane-position "position"
 ```
 
-Default is `right,,,nowrap`. You can use any options allowed [https://man.archlinux.org/man/fzf.1.en#preview~3](https://man.archlinux.org/man/fzf.1.en#preview~3).
+Default is `right,,,nowrap`. Accepts any value from the [`--preview-window` option](https://man.archlinux.org/man/fzf.1.en#preview~3) in the fzf man page.
 
 ### Icons
 
@@ -121,16 +131,12 @@ set -g @fzf_pane_switch_indent "· "
 
 Default is `· ` (middle dot + space). Set to an empty string for no indentation, or use any character(s) you prefer (e.g. `▸ `, `  `).
 
-## Tools used in demonstration
+## Demo setup
 
-* TMUX theme is [catppuccin](https://github.com/catppuccin/tmux) mocha.
-* ZSH shell prompt is [starship](https://starship.rs)
-* `fzf` theme is [catppuccin](https://github.com/catppuccin/fzf) mocha.
+* tmux theme: [catppuccin](https://github.com/catppuccin/tmux) mocha.
+* Shell prompt: [starship](https://starship.rs).
+* fzf theme: [catppuccin](https://github.com/catppuccin/fzf) mocha.
 
-## Inspiration
+## Origins
 
-I pretty much retrofitted the [brokenricefilms/tmux-fzf-session-switch](https://github.com/brokenricefilms/tmux-fzf-session-switch) TPM plugin. So, if you're looking for something to switch tmux sessions only, go check it out.
-
-## Other plugins
-
-Check out my other plugin [TMUX Flash Copy](https://github.com/Kristijan/flash-copy.tmux), that enables you to search visible words in the current tmux pane, then copy that word to the system clipboard by pressing the associated label key.
+This is a fork of [kristijan/fzf-pane-switch.tmux](https://github.com/kristijan/fzf-pane-switch.tmux), which itself was inspired by the [brokenricefilms/tmux-fzf-session-switch](https://github.com/brokenricefilms/tmux-fzf-session-switch) TPM plugin. If you're looking for something to switch tmux sessions only, go check it out.
