@@ -47,17 +47,17 @@ function select_pane() {
         {
             tmux list-sessions -F '#{session_name} #{session_id} #{session_windows}' | \
                 awk -v icon="${session_icon}" '{
-                    printf "%s:00000:00000:0 %s %s %s  %s windows\n", $1, $2, icon, $1, $3
+                    printf "%s:00000:00000:0 %s %s %s  %s %s\n", $1, $2, icon, $1, $3, ($3==1?"window":"windows")
                 }'
 
             tmux list-windows -aF '#{session_name} #{window_index} #{session_name}:#{window_index} #{window_name} #{window_panes}' | \
                 awk -v icon="${indent}${window_icon}" '{
-                    printf "%s:%05d:00000:1 %s %s %s  %s  %s panes\n", $1, $2, $3, icon, $1, $4, $5
+                    printf "%s:%05d:00000:1 %s %s %s  %s  %s %s\n", $1, $2, $3, icon, $1, $4, $5, ($5==1?"pane":"panes")
                 }'
 
-            tmux list-panes -aF '#{session_name} #{window_index} #{pane_index} #{pane_id} #{window_name} #{pane_current_command} #{window_panes}' | \
+            tmux list-panes -aF '#{session_name} #{window_index} #{pane_index} #{pane_id} #{window_name} #{pane_title} #{window_panes}' | \
                 awk -v icon="${indent}${indent}${pane_icon}" '$7 > 1 {
-                    printf "%s:%05d:%05d:2 %s %s %s  %s  %s  %s\n", $1, $2, $3, $4, icon, $4, $1, $5, $6
+                    printf "%s:%05d:%05d:2 %s %s %s  %s  %s\n", $1, $2, $3, $4, icon, $1, $5, $6
                 }'
         } | sort | cut -d' ' -f2- |
         eval SHELL=/bin/sh fzf --exit-0 --print-query --reverse --tmux "${2}" --with-nth=2.. "${border_styling}" "${preview}" |
