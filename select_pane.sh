@@ -47,12 +47,12 @@ function select_pane() {
         {
             tmux list-sessions -F '#{session_name} #{session_id} #{session_windows}' | \
                 awk -v icon="${session_icon}" '{
-                    printf "%s:00000:00000:0 %s %s %s  %s %s\n", $1, $2, icon, $1, $3, ($3==1?"window":"windows")
+                    printf "%s:00000:00000:0 %s %s %s  %s\n", $1, $2, icon, $1, ($3==1?"":$3" windows")
                 }'
 
-            tmux list-windows -aF '#{session_name} #{window_index} #{session_name}:#{window_index} #{window_name} #{window_panes}' | \
-                awk -v icon="${indent}${window_icon}" '{
-                    printf "%s:%05d:00000:1 %s %s %s  %s  %s %s\n", $1, $2, $3, icon, $1, $4, $5, ($5==1?"pane":"panes")
+            tmux list-windows -aF '#{session_name} #{window_index} #{session_name}:#{window_index} #{window_name} #{window_panes} #{session_windows}' | \
+                awk -v icon="${indent}${window_icon}" '$6 > 1 {
+                    printf "%s:%05d:00000:1 %s %s %s  %s  %s\n", $1, $2, $3, icon, $1, $4, ($5==1?"":$5" panes")
                 }'
 
             tmux list-panes -aF '#{session_name} #{window_index} #{pane_index} #{pane_id} #{window_name} #{pane_title} #{window_panes}' | \
