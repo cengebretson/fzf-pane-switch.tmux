@@ -12,6 +12,8 @@ default_window_icon='󰖲'
 default_pane_icon='󰆍'
 default_indent='▪  '
 default_separator='/'
+default_highlight_color='166;227;161'
+default_activity_color='249;226;175'
 
 # User overridable options
 tmux_bind_key="@fzf_pane_switch_bind-key"
@@ -23,6 +25,8 @@ tmux_window_icon="@fzf_pane_switch_window-icon"
 tmux_pane_icon="@fzf_pane_switch_pane-icon"
 tmux_indent="@fzf_pane_switch_indent"
 tmux_separator="@fzf_pane_switch_separator"
+tmux_highlight_color="@fzf_pane_switch_highlight-color"
+tmux_activity_color="@fzf_pane_switch_activity-color"
 
 get_tmux_option() {
     local option="${1}"
@@ -38,7 +42,7 @@ get_tmux_option() {
 
 set_switch_pane_bindings() {
     local bind_key preview_pane fzf_window_position fzf_preview_window_position
-    local session_icon window_icon pane_icon indent separator
+    local session_icon window_icon pane_icon indent separator highlight_color activity_color
     bind_key="$(get_tmux_option "${tmux_bind_key}" "${default_bind_key}")"
     preview_pane="$(get_tmux_option "${tmux_preview_pane}" "${default_preview_pane}")"
     fzf_window_position="$(get_tmux_option "${tmux_fzf_window_position}" "${default_fzf_window_position}")"
@@ -48,9 +52,11 @@ set_switch_pane_bindings() {
     pane_icon="$(get_tmux_option "${tmux_pane_icon}" "${default_pane_icon}")"
     indent="$(get_tmux_option "${tmux_indent}" "${default_indent}")"
     separator="$(get_tmux_option "${tmux_separator}" "${default_separator}")"
+    highlight_color="$(get_tmux_option "${tmux_highlight_color}" "${default_highlight_color}")"
+    activity_color="$(get_tmux_option "${tmux_activity_color}" "${default_activity_color}")"
 
     tmux bind-key "${bind_key}" run-shell \
-        "'${CURRENT_DIR}/select_pane.sh' '${preview_pane}' '${fzf_window_position}' '${fzf_preview_window_position}' '${session_icon}' '${window_icon}' '${pane_icon}' '${indent}' '${separator}'"
+        "'${CURRENT_DIR}/select_pane.sh' '${preview_pane}' '${fzf_window_position}' '${fzf_preview_window_position}' '${session_icon}' '${window_icon}' '${pane_icon}' '${indent}' '${separator}' '${highlight_color}' '${activity_color}'"
 }
 
 set_switch_pane_bindings

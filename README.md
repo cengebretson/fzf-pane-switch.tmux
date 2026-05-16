@@ -2,9 +2,9 @@
     🔀 tmux-fzf-jump
 </h1>
 
-![Demonstration of tmux-fzf-pane-switch in action](assets/tmux-fzf-pane-switch-demo.gif)
+![Demonstration of tmux-fzf-pane-switch in action](assets/demo.gif)
 
-Switch to any tmux session, window, or pane using fzf. The list is grouped hierarchically — sessions at the top, windows beneath their session, and panes beneath their window (only shown when a window has more than one pane).
+Switch to any tmux session, window, or pane using fzf. The list is grouped hierarchically — sessions at the top (sorted by most recently used), windows beneath their session, and panes beneath their window (only shown when a window has more than one pane). Windows and panes with unread activity are marked with a `●` indicator, and panes show the current working directory and running command alongside their name.
 
 ## Requirements
 
@@ -54,6 +54,16 @@ Switch to any tmux session, window, or pane using fzf. The list is grouped hiera
 
 Press `<prefix> + j` (the default key binding) to open the switcher. Type to fuzzy-search, use arrow keys to navigate, and press Enter to switch.
 
+### In-picker key bindings
+
+| Key | Action |
+|---|---|
+| `ctrl-n` | New session / window / pane (context-sensitive) |
+| `ctrl-r` | Rename selected session / window / pane |
+| `ctrl-d` | Detach all clients from selected session |
+| `ctrl-x` | Kill selected session / window / pane |
+| `ctrl-p` | Toggle preview pane |
+
 ## Configuration
 
 All options are set in `~/.tmux.conf`. Quick reference:
@@ -66,8 +76,11 @@ All options are set in `~/.tmux.conf`. Quick reference:
 | `@fzf_pane_switch_preview-pane-position` | `right,,,nowrap` | Preview window position |
 | `@fzf_pane_switch_session-icon` | `󰐱` | Icon for session entries |
 | `@fzf_pane_switch_window-icon` | `󰖲` | Icon for window entries |
-| `@fzf_pane_switch_pane-icon` | `󰘗` | Icon for pane entries |
-| `@fzf_pane_switch_indent` | `· ` | Indent string for hierarchy |
+| `@fzf_pane_switch_pane-icon` | `󰆍` | Icon for pane entries |
+| `@fzf_pane_switch_indent` | `▪  ` | Indent string for hierarchy |
+| `@fzf_pane_switch_separator` | `/` | Separator between session/window/pane names |
+| `@fzf_pane_switch_highlight-color` | `166;227;161` | RGB color for the current item highlight |
+| `@fzf_pane_switch_activity-color` | `249;226;175` | RGB color for the activity indicator `●` |
 
 ### Key binding
 
@@ -91,7 +104,7 @@ Default is `center,70%,80%`. Accepts any value from the [`--tmux` option](https:
 set -g @fzf_pane_switch_preview-pane "[true|false]"
 ```
 
-Default is `true`.
+Default is `true`. Can also be toggled on the fly with `ctrl-p` inside the picker.
 
 ### Pane preview position
 
@@ -110,7 +123,7 @@ Each entry type has a configurable icon. The defaults require a [Nerd Font](http
 ```bash
 set -g @fzf_pane_switch_session-icon "󰐱"
 set -g @fzf_pane_switch_window-icon  "󰖲"
-set -g @fzf_pane_switch_pane-icon    "󰘗"
+set -g @fzf_pane_switch_pane-icon    "󰆍"
 ```
 
 Any string works — including plain text fallbacks if you don't have a Nerd Font:
@@ -126,10 +139,29 @@ set -g @fzf_pane_switch_pane-icon    "P"
 The indent string is prepended to the icon once for windows and twice for panes, creating the visual hierarchy.
 
 ```bash
-set -g @fzf_pane_switch_indent "· "
+set -g @fzf_pane_switch_indent "▪  "
 ```
 
-Default is `· ` (middle dot + space). Set to an empty string for no indentation, or use any character(s) you prefer (e.g. `▸ `, `  `).
+Default is `▪  `. Set to an empty string for no indentation, or use any character(s) you prefer (e.g. `· `, `▸ `, `  `).
+
+### Separator
+
+The separator string appears between session, window, and pane names in each list entry.
+
+```bash
+set -g @fzf_pane_switch_separator "/"
+```
+
+Default is `/`.
+
+### Colors
+
+Colors are specified as RGB triplets in the form `R;G;B` (used in ANSI 24-bit color escapes).
+
+```bash
+set -g @fzf_pane_switch_highlight-color "166;227;161"  # current item (default: Catppuccin green)
+set -g @fzf_pane_switch_activity-color  "249;226;175"  # activity dot (default: Catppuccin yellow)
+```
 
 ## Demo setup
 
